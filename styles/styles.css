@@ -1,0 +1,149 @@
+.map {
+    height: 400px;
+    width: 100%;
+}
+
+.data {
+    height: 400px;
+    width: 50%;
+    float: left;
+}
+
+h1 {
+    background-color: #3399ff;
+    padding: 2%;
+    text-align: center;
+}
+
+.buttonStyle {
+    background-color: #04AA6D;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    /* border: 2px solid #04AA6D; */
+    font-weight: bold;
+}
+
+.divButton {
+    width: 100%;
+    padding: 2%;
+    text-align: center;
+}
+
+
+.marker-pin {
+    width: 30px;
+    height: 42px;
+    border-radius: 50% 50% 50% 0;
+    background: #ff0000;
+    position: relative;
+    transform: rotate(-45deg);
+    left: 50%;
+    top: 50%;
+    margin: -21px 0 0 -15px;
+}
+
+.marker-pin:after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    margin: 8px 0 0 8px;
+    background: #ffffff;
+    position: absolute;
+    border-radius: 50%;
+}
+
+/* definicja stylu dla selected coordinates */
+.table_componentSC {
+    overflow: auto;
+}
+
+.table_componentSC table {
+    border: 1px solid #dededf;
+    table-layout: auto;
+    border-collapse: collapse;
+    border-spacing: 1px;
+    text-align: center;
+}
+
+.table_componentSC caption {
+    caption-side: top;
+    text-align: center;
+    font-size: small;
+}
+
+.table_componentSC th {
+    border: 1px solid #dededf;
+    background-color: #04AA6D;
+    color: #000000;
+    padding: 5px;
+}
+
+.table_componentSC td {
+    border: 1px solid #dededf;
+    background-color: #ffffff;
+    color: #000000;
+    padding: 5px;
+    text-align: center;
+}
+
+
+/* definicja stylu dla tabeli adjacency matrix */
+.table_component {
+    overflow: auto;
+}
+
+.table_component table {
+    border: 1px solid #dededf;
+    table-layout: auto;
+    border-collapse: collapse;
+    border-spacing: 1px;
+    text-align: center;
+}
+
+.table_component caption {
+    caption-side: top;
+    text-align: center;
+    font-size: small;
+}
+
+.table_component th {
+    border: 1px solid #dededf;
+    background-color: #04AA6D;
+    color: #000000;
+    padding: 5px;
+    text-align: center;
+}
+
+.table_component td {
+    border: 1px solid #dededf;
+    background-color: #ffffff;
+    color: #000000;
+    padding: 5px;
+    text-align: center;
+}
+
+/* Dodajemy styl tylko dla pierwszej komórki w każdym wierszu */
+.table_component td:first-child {
+    background-color: #04AA6D;
+    /* Kolor taki sam jak nagłówek */
+    color: #000000;
+    padding: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/*syle znaczników na mapie */
+.marker-label {
+    display: inline-block;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}

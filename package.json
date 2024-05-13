@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "leaflet.markercluster": "^1.5.3",
+    "leaflet.markercluster.freezable": "^1.0.0"
+  }
+}
