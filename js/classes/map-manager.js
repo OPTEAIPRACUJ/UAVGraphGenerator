@@ -1,5 +1,5 @@
 // klasa w której jest cała logika programu
-import Marker from "./classes/marker";
+import Marker from "./marker.js";
 
 export default class MapManager {
   constructor() {
