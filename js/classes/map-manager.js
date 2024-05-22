@@ -23,28 +23,38 @@ export default class MapManager {
    * Metoda do obsługi kliknięcia na mapie
    */
   handleMapClick(e) {
+    const id = this.markers.length;
     const name = this.generatePointName();
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
+    let availableColors = ["gold", "red", "green", "orange", "yellow", "violet", "grey", "black"]
+    let randomColorIndex = Math.floor(Math.random() * availableColors.length)
+    const color = id > 0 ? availableColors[randomColorIndex] : "blue";
 
-    const marker = L.marker([lat, lng]).addTo(this.map);
+    var greenIcon = new L.Icon({
+      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+    
+    const marker = L.marker([lat, lng], {icon: greenIcon}).addTo(this.map);
 
     // Dodajemy wiązanie popup z nazwą punktu
     marker.bindPopup(name).openPopup();
 
     marker.on("click", () => this.handleMarkerClick(marker));
-    const newMarker = new Marker(name, lat, lng, marker); // Usunięto odniesienie do koloru
+    const newMarker = new Marker(id, name, lat, lng, marker, color);
     this.markers.push(newMarker);
 
-    this.updateCoordinatesTable();
+    this.updateCoordinatesTable(color);
   }
 
   handleMarkerClick(marker) {
-    const newColor = "blue"; // Ustawienie domyślnego koloru na blue
-    marker.options.icon.options.html = `<div style="background-color: ${newColor};" class="marker-pin"></div>`;
+    marker.options.icon.options.html = `<div style="background-color: ${marker?.color ? marker.color : "blue"};" class="marker-pin"></div>`;
     marker.setIcon(marker.options.icon);
-    const markerIndex = this.markers.findIndex((m) => m.marker === marker);
-    this.markers[markerIndex].color = newColor;
   }
 
   /**
@@ -148,7 +158,6 @@ export default class MapManager {
       const name = marker.name;
       const lat = marker.lat.toFixed(6);
       const lng = marker.lng.toFixed(6);
-      const color = marker.color;
 
       const row = `<tr>
                             <td>${name}</td>
