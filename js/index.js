@@ -1,4 +1,4 @@
-import MapManager from "./classes/map-manager";
+import MapManager from "./classes/map-manager.js";
 
 const mapManager = new MapManager();
 
