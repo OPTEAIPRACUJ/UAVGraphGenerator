@@ -8,6 +8,8 @@ export default class MapManager {
     this.connections = [];
     this.baseName = "UAV BASE";
     this.pointNameCounter = 0;
+    this.maxRange = 7.5;
+    this.dragStartPosition = null;
   }
   //Metoda do generowania mapy
   initMap() {
@@ -23,10 +25,20 @@ export default class MapManager {
    * Metoda do obsługi kliknięcia na mapie
    */
   handleMapClick(e) {
-    const id = this.markers.length;
-    const name = this.generatePointName();
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
+
+    if (this.markers.length > 0) {
+      const baseMarker = this.markers[0];
+      const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
+      
+      if (distanceFromBase > this.maxRange) {
+          alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
+          return;
+      }
+  }
+    const id = this.markers.length;
+    const name = this.generatePointName();
     let availableColors = ["gold", "red", "green", "orange", "yellow", "violet", "grey", "black"];
     let randomColorIndex = Math.floor(Math.random() * availableColors.length);
     const color = id > 0 ? availableColors[randomColorIndex] : "blue";
@@ -46,6 +58,13 @@ export default class MapManager {
 
     marker.on("click", () => this.handleMarkerClick(marker));
 
+    marker.on("dragstart", (event) => {
+      // Zapisujemy pozycję początkową markera
+      const startPosition = event.target.getLatLng();
+      this.dragStartPosition = { lat: startPosition.lat, lng: startPosition.lng };
+      console.log("Początkowa pozycja markera:", this.dragStartPosition);
+    });
+
     marker.on("dragend", (event) => {
       const newLatLng = event.target.getLatLng();
       this.updateMarkerPosition(id, newLatLng.lat, newLatLng.lng);
@@ -58,8 +77,18 @@ export default class MapManager {
 }
 
 updateMarkerPosition(id, lat, lng) {
-    this.markers[id].lat = lat;
-    this.markers[id].lng = lng;
+  const baseMarker = this.markers[0];
+  const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
+
+    if (distanceFromBase > this.maxRange) {
+      alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
+      const marker = this.markers[id].marker;
+      marker.setLatLng(this.dragStartPosition); // Cofnięcie markera do początkowej pozycji
+    } else {
+      this.markers[id].lat = lat;
+      this.markers[id].lng = lng;
+    }
+
     this.updateCoordinatesTable();
     this.updateConnections();
     this.generateGraph();
