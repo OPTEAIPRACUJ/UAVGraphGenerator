@@ -27,8 +27,8 @@ export default class MapManager {
     const name = this.generatePointName();
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
-    let availableColors = ["gold", "red", "green", "orange", "yellow", "violet", "grey", "black"]
-    let randomColorIndex = Math.floor(Math.random() * availableColors.length)
+    let availableColors = ["gold", "red", "green", "orange", "yellow", "violet", "grey", "black"];
+    let randomColorIndex = Math.floor(Math.random() * availableColors.length);
     const color = id > 0 ? availableColors[randomColorIndex] : "blue";
 
     var greenIcon = new L.Icon({
@@ -39,18 +39,31 @@ export default class MapManager {
       popupAnchor: [1, -34],
       shadowSize: [41, 41]
     });
-    
-    const marker = L.marker([lat, lng], {icon: greenIcon}).addTo(this.map);
 
-    // Dodajemy wiązanie popup z nazwą punktu
+    const marker = L.marker([lat, lng], { icon: greenIcon, draggable: true }).addTo(this.map);
+
     marker.bindPopup(name).openPopup();
 
     marker.on("click", () => this.handleMarkerClick(marker));
+
+    marker.on("dragend", (event) => {
+      const newLatLng = event.target.getLatLng();
+      this.updateMarkerPosition(id, newLatLng.lat, newLatLng.lng);
+    });
+
     const newMarker = new Marker(id, name, lat, lng, marker, color);
     this.markers.push(newMarker);
 
     this.updateCoordinatesTable(color);
-  }
+}
+
+updateMarkerPosition(id, lat, lng) {
+    this.markers[id].lat = lat;
+    this.markers[id].lng = lng;
+    this.updateCoordinatesTable();
+    this.updateConnections();
+    this.generateGraph();
+}
 
   handleMarkerClick(marker) {
     marker.options.icon.options.html = `<div style="background-color: ${marker?.color ? marker.color : "blue"};" class="marker-pin"></div>`;
