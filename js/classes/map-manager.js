@@ -1,5 +1,6 @@
 // klasa w której jest cała logika programu
 import Marker from "./marker.js";
+import { updateCoordinatesTable } from "../index.js";
 
 export default class MapManager {
   constructor() {
@@ -27,32 +28,33 @@ export default class MapManager {
   handleMapClick(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
-
-    if (this.markers.length > 0) {
-      const baseMarker = this.markers[0];
-      const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
-      
-      if (distanceFromBase > this.maxRange) {
-          alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
-          return;
-      }
-  }
-    const id = this.markers.length;
-    const name = this.generatePointName();
-    let availableColors = ["gold", "red", "green", "orange", "yellow", "violet", "grey", "black"];
+    let availableColors = [
+      "gold",
+      "red",
+      "green",
+      "orange",
+      "yellow",
+      "violet",
+      "grey",
+      "black",
+    ];
     let randomColorIndex = Math.floor(Math.random() * availableColors.length);
     const color = id > 0 ? availableColors[randomColorIndex] : "blue";
 
     var greenIcon = new L.Icon({
       iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
-      shadowSize: [41, 41]
+      shadowSize: [41, 41],
     });
 
-    const marker = L.marker([lat, lng], { icon: greenIcon, draggable: true }).addTo(this.map);
+    const marker = L.marker([lat, lng], {
+      icon: greenIcon,
+      draggable: true,
+    }).addTo(this.map);
 
     marker.bindPopup(name).openPopup();
 
@@ -73,29 +75,21 @@ export default class MapManager {
     const newMarker = new Marker(id, name, lat, lng, marker, color);
     this.markers.push(newMarker);
 
-    this.updateCoordinatesTable(color);
-}
+    updateCoordinatesTable(this.markers);
+  }
 
-updateMarkerPosition(id, lat, lng) {
-  const baseMarker = this.markers[0];
-  const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
-
-    if (distanceFromBase > this.maxRange) {
-      alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
-      const marker = this.markers[id].marker;
-      marker.setLatLng(this.dragStartPosition); // Cofnięcie markera do początkowej pozycji
-    } else {
-      this.markers[id].lat = lat;
-      this.markers[id].lng = lng;
-    }
-
-    this.updateCoordinatesTable();
+  updateMarkerPosition(id, lat, lng) {
+    this.markers[id].lat = lat;
+    this.markers[id].lng = lng;
+    updateCoordinatesTable(this.markers);
     this.updateConnections();
     this.generateGraph();
-}
+  }
 
   handleMarkerClick(marker) {
-    marker.options.icon.options.html = `<div style="background-color: ${marker?.color ? marker.color : "blue"};" class="marker-pin"></div>`;
+    marker.options.icon.options.html = `<div style="background-color: ${
+      marker?.color ? marker.color : "blue"
+    };" class="marker-pin"></div>`;
     marker.setIcon(marker.options.icon);
   }
 
@@ -128,7 +122,7 @@ updateMarkerPosition(id, lat, lng) {
   clearMarkers() {
     this.markers.forEach((marker) => this.map.removeLayer(marker.marker));
     this.markers = [];
-    this.updateCoordinatesTable();
+    updateCoordinatesTable(this.markers);
     this.clearConnections();
     this.clearAdjacencyMatrix(); // Dodana linia czyszcząca tablicę sąsiedztwa
   }
@@ -190,34 +184,11 @@ updateMarkerPosition(id, lat, lng) {
   }
 
   /**
-   * Metoda do aktualizowania tabeli z zaznaczonymi współrzędnymi
-   */
-  updateCoordinatesTable() {
-    const tableBody = document.querySelector("#coordinatesTable tbody");
-    tableBody.innerHTML = "";
-
-    this.markers.forEach((marker, index) => {
-      const name = marker.name;
-      const lat = marker.lat.toFixed(6);
-      const lng = marker.lng.toFixed(6);
-
-      const row = `<tr>
-                            <td>${name}</td>
-                            <td>${lat}</td>
-                            <td>${lng}</td>
-                            <td><button onclick="mapManager.removeMarker(${index})">Remove</button></td>
-                        </tr>`;
-      tableBody.innerHTML += row;
-    });
-  }
-
-  /**
    * Metoda do usuwania wybranego znacznika
    */
   removeMarker(index) {
     const removedMarker = this.markers.splice(index, 1)[0]; // Usuwamy znacznik i go pobieramy
     const deletedName = removedMarker.name;
-
     this.map.removeLayer(removedMarker.marker);
 
     // Aktualizujemy nazwę punktu w bindPopup
@@ -233,8 +204,7 @@ updateMarkerPosition(id, lat, lng) {
       // Jeśli usunięto inny punkt, aktualizuj nazwy punktów
       this.updatePointNames();
     }
-
-    this.updateCoordinatesTable();
+    updateCoordinatesTable(this.markers);
     this.updateConnections();
     this.generateGraph(); // Ponownie generujemy graf po usunięciu punktu
   }
@@ -432,6 +402,6 @@ updateMarkerPosition(id, lat, lng) {
     const newMarker = new Marker(name, lat, lng, marker, color);
     this.markers.push(newMarker);
 
-    this.updateCoordinatesTable();
+    updateCoordinatesTable(this.markers);
   }
 }
