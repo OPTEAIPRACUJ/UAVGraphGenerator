@@ -28,6 +28,17 @@ export default class MapManager {
   handleMapClick(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
+    if (this.markers.length > 0) {
+      const baseMarker = this.markers[0];
+      const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
+      
+      if (distanceFromBase > this.maxRange) {
+          alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
+          return;
+      }
+  }
+    const id = this.markers.length;
+    const name = this.generatePointName();
     let availableColors = [
       "gold",
       "red",
@@ -78,13 +89,25 @@ export default class MapManager {
     updateCoordinatesTable(this.markers);
   }
 
-  updateMarkerPosition(id, lat, lng) {
-    this.markers[id].lat = lat;
-    this.markers[id].lng = lng;
+ 
+updateMarkerPosition(id, lat, lng) {
+  const baseMarker = this.markers[0];
+  const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
+
+    if (distanceFromBase > this.maxRange) {
+      alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
+      const marker = this.markers[id].marker;
+      marker.setLatLng(this.dragStartPosition); // Cofnięcie markera do początkowej pozycji
+    } else {
+      this.markers[id].lat = lat;
+      this.markers[id].lng = lng;
+    }
+
     updateCoordinatesTable(this.markers);
     this.updateConnections();
     this.generateGraph();
-  }
+}
+
 
   handleMarkerClick(marker) {
     marker.options.icon.options.html = `<div style="background-color: ${
@@ -188,6 +211,7 @@ export default class MapManager {
    */
   removeMarker(index) {
     const removedMarker = this.markers.splice(index, 1)[0]; // Usuwamy znacznik i go pobieramy
+    if(!removedMarker) return
     const deletedName = removedMarker.name;
     this.map.removeLayer(removedMarker.marker);
 
@@ -212,6 +236,8 @@ export default class MapManager {
   /*metoda do aktualizowania nazw punktów*/
   updatePointNames() {
     let index = 0;
+
+    if(!this.markers.length) return
 
     if (this.markers[0].name === this.baseName) {
       index = 1;

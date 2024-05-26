@@ -23,7 +23,7 @@ export function updateCoordinatesTable(markers) {
       tableBody.innerHTML += row;
     });
 
-    const removeButtons =document.querySelectorAll(`.removeButton`)
+    const removeButtons = document.querySelectorAll(`.removeButton`)
     removeButtons.forEach(node => {
       node.addEventListener('click', (event) => {
         const nodeIndex = event.target.dataset.index;
