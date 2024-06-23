@@ -1,4 +1,3 @@
-// klasa w której jest cała logika programu
 import Marker from "./marker.js";
 import { updateCoordinatesTable } from "../index.js";
 
@@ -12,20 +11,19 @@ export default class MapManager {
     this.maxRange = 7.5;
     this.dragStartPosition = null;
   }
-  //Metoda do generowania mapy
+  
   initMap() {
-    this.map = L.map("map").setView([50.035, 22.001], 10); // Ustawiamy początkowe współrzędne i powiększenie
-    // Dodajemy kafelki z OpenStreetMap
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
-      this.map
-    );
+    this.map = L.map("map").setView([50.035, 22.001], 10);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(this.map);
     this.map.on("click", (e) => this.handleMapClick(e));
   }
 
-  /**
-   * Metoda do obsługi kliknięcia na mapie
-   */
   handleMapClick(e) {
+    let id = this.markers[this.markers.length-1]?.id+1;
+    if(isNaN(id)){
+      id = 0;
+    }
+  
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
     if (this.markers.length > 0) {
@@ -33,11 +31,11 @@ export default class MapManager {
       const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
       
       if (distanceFromBase > this.maxRange) {
-          alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
-          return;
+        alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
+        return;
       }
-  }
-    const id = this.markers.length;
+    }
+   
     const name = this.generatePointName();
     let availableColors = [
       "gold",
@@ -54,8 +52,7 @@ export default class MapManager {
 
     var greenIcon = new L.Icon({
       iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-      shadowUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
@@ -69,12 +66,16 @@ export default class MapManager {
 
     marker.bindPopup(name).openPopup();
 
+    const newMarker = new Marker(id, name, lat, lng, marker, color);
+    this.markers.push(newMarker);
     marker.on("click", () => this.handleMarkerClick(marker));
 
+    
+
     marker.on("dragstart", (event) => {
-      // Zapisujemy pozycję początkową markera
       const startPosition = event.target.getLatLng();
       this.dragStartPosition = { lat: startPosition.lat, lng: startPosition.lng };
+      
       console.log("Początkowa pozycja markera:", this.dragStartPosition);
     });
 
@@ -82,32 +83,32 @@ export default class MapManager {
       const newLatLng = event.target.getLatLng();
       this.updateMarkerPosition(id, newLatLng.lat, newLatLng.lng);
     });
-
-    const newMarker = new Marker(id, name, lat, lng, marker, color);
-    this.markers.push(newMarker);
-
     updateCoordinatesTable(this.markers);
   }
 
- 
-updateMarkerPosition(id, lat, lng) {
-  const baseMarker = this.markers[0];
-  const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
+  updateMarkerPosition(id, lat, lng) {
+    const baseMarker = this.markers[0];
+    const distanceFromBase = this.haversine(baseMarker.lat, baseMarker.lng, lat, lng);
 
     if (distanceFromBase > this.maxRange) {
       alert("Odległość od punktu bazowego przekracza maksymalny zasięg drona (7.5 km w jedną stronę).");
-      const marker = this.markers[id].marker;
+      const marker = this.markers.find((marker)=>marker.id===id).marker;
       marker.setLatLng(this.dragStartPosition); // Cofnięcie markera do początkowej pozycji
     } else {
-      this.markers[id].lat = lat;
-      this.markers[id].lng = lng;
+      console.log("ID markera:", id);
+      const marker = this.markers.find((marker)=>marker.id===id);
+      if (marker) {
+        marker.lat = lat;
+        marker.lng = lng;
+      } else {
+        console.error(`Marker o ID ${id} nie istnieje.`);
+      }
     }
 
     updateCoordinatesTable(this.markers);
     this.updateConnections();
     this.generateGraph();
-}
-
+  }
 
   handleMarkerClick(marker) {
     marker.options.icon.options.html = `<div style="background-color: ${
@@ -116,20 +117,16 @@ updateMarkerPosition(id, lat, lng) {
     marker.setIcon(marker.options.icon);
   }
 
-  /**
-   *   Metoda do generowania unikalnej nazwy punktu na podstawie aktualnej liczby punktów
-   */
   generatePointName() {
     if (this.markers.length === 0) {
-      return this.baseName; // Jeśli brak punktów, zwracamy nazwę "UAV BASE"
+      return this.baseName;
     } else {
       if (this.markers.length === 1 && this.markers[0].name === this.baseName) {
-        return "A"; // Jeśli pierwszy punkt po bazie UAV, zwracamy 'A'
+        return "A";
       } else {
-        const lastChar =
-          this.markers[this.markers.length - 1].name.charCodeAt(0);
+        const lastChar = this.markers[this.markers.length - 1].name.charCodeAt(0);
         if (lastChar >= 90) {
-          return "A"; // Jeśli ostatni punkt ma nazwę 'Z', zwracamy 'A'
+          return "A";
         } else {
           const nextChar = String.fromCharCode(lastChar + 1);
           return nextChar;
@@ -137,17 +134,13 @@ updateMarkerPosition(id, lat, lng) {
       }
     }
   }
-  /**Metoda do czyszczenia znaczników z mapy
-   * Metoda usuwa wszytskie znaczniki z mapy, czyści tablicę znaczników.
-   * Nastepnie aktualizauje tablicę współrzędnych,
-   * czyści macierz sąsiedztwa i resetuje licznik punktów
-   */
+
   clearMarkers() {
     this.markers.forEach((marker) => this.map.removeLayer(marker.marker));
     this.markers = [];
     updateCoordinatesTable(this.markers);
     this.clearConnections();
-    this.clearAdjacencyMatrix(); // Dodana linia czyszcząca tablicę sąsiedztwa
+    this.clearAdjacencyMatrix();
   }
 
   clearAdjacencyMatrix() {
@@ -155,14 +148,9 @@ updateMarkerPosition(id, lat, lng) {
     table.innerHTML = "";
   }
 
-  /**
-   * Metoda do generowania grafu i obliczania odległości
-   */
   generateGraph() {
     if (this.markers.length < 2) {
-      console.error(
-        "Minimum two points (base UAV and at least one airport) must be selected."
-      );
+      console.error("Minimum two points (base UAV and at least one airport) must be selected.");
       return;
     }
 
@@ -172,12 +160,7 @@ updateMarkerPosition(id, lat, lng) {
       const row = [];
       for (let j = 0; j < this.markers.length; j++) {
         row.push(
-          this.haversine(
-            this.markers[i].lat,
-            this.markers[i].lng,
-            this.markers[j].lat,
-            this.markers[j].lng
-          )
+          this.haversine(this.markers[i].lat, this.markers[i].lng, this.markers[j].lat, this.markers[j].lng)
         );
       }
       adjacency_matrix.push(row);
@@ -188,13 +171,10 @@ updateMarkerPosition(id, lat, lng) {
     console.log("Adjacency Matrix:", adjacency_matrix);
   }
 
-  /**
-   * Metoda do obliczania odległości między dwoma punktami na sferze ziemskiej za pomocą formuły haversine
-   */
   haversine(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const dLon = ((lon1 - lon2) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
@@ -206,62 +186,52 @@ updateMarkerPosition(id, lat, lng) {
     return distance;
   }
 
-  /**
-   * Metoda do usuwania wybranego znacznika
-   */
   removeMarker(index) {
-    const removedMarker = this.markers.splice(index, 1)[0]; // Usuwamy znacznik i go pobieramy
+    const removedMarker = this.markers.splice(index, 1)[0];
+    console.log("removedMarker: ",removedMarker);
     if(!removedMarker) return
     const deletedName = removedMarker.name;
     this.map.removeLayer(removedMarker.marker);
-
-    // Aktualizujemy nazwę punktu w bindPopup
+    
     removedMarker.marker.bindPopup(removedMarker.name).openPopup();
-
     if (deletedName === this.baseName && this.markers.length > 0) {
-      // Jeśli usunięto punkt bazowy UAV i istnieją jeszcze inne punkty
       if (this.markers[0].name !== this.baseName) {
         this.markers[0].name = this.baseName;
       }
-      this.updatePointNames(); // Aktualizuj nazwy punktów
+      this.updatePointNames();
     } else {
-      // Jeśli usunięto inny punkt, aktualizuj nazwy punktów
       this.updatePointNames();
     }
+
     updateCoordinatesTable(this.markers);
     this.updateConnections();
-    this.generateGraph(); // Ponownie generujemy graf po usunięciu punktu
+    this.generateGraph();
   }
 
-  /*metoda do aktualizowania nazw punktów*/
   updatePointNames() {
     let index = 0;
 
     if(!this.markers.length) return
-
+    
     if (this.markers[0].name === this.baseName) {
       index = 1;
     }
 
     for (let i = index; i < this.markers.length; i++) {
       this.markers[i].name = String.fromCharCode(65 + (i - index));
-      // Aktualizujemy nazwę punktu w bindPopup
+      console.log("index:", i, " marker: ", this.markers[i].name);
+      this.markers[0].marker.bindPopup(this.baseName).openPopup();
+      // let baseMarker = this.markers[0];
       this.markers[i].marker.bindPopup(this.markers[i].name).openPopup();
     }
   }
 
-  /**
-   * Metoda do aktualizowania linii łączących punkty na mapie
-   */
   updateConnections() {
     this.connections.forEach((connection) => this.map.removeLayer(connection));
     this.connections.length = 0;
     this.drawConnections(this.markers);
   }
 
-  /**
-   * Metoda do rysowania linii łączących punkty na mapie
-   */
   drawConnections(nodes) {
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -269,22 +239,45 @@ updateMarkerPosition(id, lat, lng) {
           [nodes[i].lat, nodes[i].lng],
           [nodes[j].lat, nodes[j].lng],
         ];
-        const connection = L.polyline(latlngs, { color: "blue" }).addTo(
-          this.map
-        );
-        this.connections.push(connection);
+        const polyline = L.polyline(latlngs, { color: "blue" }).addTo(this.map);
+        this.connections.push(polyline);
       }
     }
   }
 
-  /**
-   * Metoda do usunięcie wszystkich linii (połączeń) z mapy oraz wyczyszczenie tablicy przechowującej te połączenia
-   */
-  clearConnections() {
-    this.connections.forEach((connection) => {
-      this.map.removeLayer(connection);
-    });
+  updateAdjacencyMatrixTable(matrix, markers) {
+    const table = document.getElementById("adjacencyMatrixTable");
+    table.innerHTML = "";
+    const headerRow = document.createElement("tr");
+    const emptyHeader = document.createElement("th");
+    headerRow.appendChild(emptyHeader);
 
+    for (let i = 0; i < markers.length; i++) {
+      const headerCell = document.createElement("th");
+      headerCell.innerText = markers[i].name;
+      headerRow.appendChild(headerCell);
+    }
+
+    table.appendChild(headerRow);
+
+    for (let i = 0; i < matrix.length; i++) {
+      const row = document.createElement("tr");
+      const rowHeader = document.createElement("th");
+      rowHeader.innerText = markers[i].name;
+      row.appendChild(rowHeader);
+
+      for (let j = 0; j < matrix[i].length; j++) {
+        const cell = document.createElement("td");
+        cell.innerText = matrix[i][j].toFixed(2);
+        row.appendChild(cell);
+      }
+
+      table.appendChild(row);
+    }
+  }
+
+  clearConnections() {
+    this.connections.forEach((connection) => this.map.removeLayer(connection));
     this.connections = [];
   }
 
@@ -429,5 +422,8 @@ updateMarkerPosition(id, lat, lng) {
     this.markers.push(newMarker);
 
     updateCoordinatesTable(this.markers);
+  }
+  check(){
+    console.log(this.markers);
   }
 }

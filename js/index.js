@@ -47,6 +47,9 @@ document.getElementById("clearLineBtn").addEventListener("click", function () {
 document.getElementById("saveBtn").addEventListener("click", function () {
   mapManager.saveGraph();
 });
+document.getElementById("checkButton").addEventListener("click", function () {
+  mapManager.check();
+});
 
 document
   .getElementById("fileInput")
