@@ -142,7 +142,8 @@ export default class MapManager {
       }
     }
   }
-/**Metoda do czyszczenia znaczników z mapy
+/* 
+ * Metoda do czyszczenia znaczników z mapy
  * Metoda usuwa wszytskie znaczniki z mapy, czyści tablicę znaczników.
  * Nastepnie aktualizauje tablicę współrzędnych,
  * czyści macierz sąsiedztwa i resetuje licznik punktów
